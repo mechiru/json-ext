@@ -1,3 +1,5 @@
+//! This library provides an extension object for [serde_json](crates.io/crates/serde_json) crate.
+
 use serde::{de, ser, Deserialize, Serialize};
 use serde_json::{Map, Value};
 
