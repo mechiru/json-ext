@@ -1,0 +1,16 @@
+[package]
+name = "json-ext"
+version = "0.1.0"
+authors = ["mechiru <u9053u6d41@gmail.com>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+description = "This library provides an extension object for serde_json crate."
+repository = "https://github.com/mechiru/json-ext"
+documentation = "https://docs.rs/json-ext"
+categories = []
+keywords = ["json", "extension"]
+readme = "README.md"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
