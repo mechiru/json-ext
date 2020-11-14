@@ -9,16 +9,20 @@ pub struct Ext<'a>(&'a RawValue);
 
 impl<'a> Ext<'a> {
     /// Convert a `&RawValue` to an `Ext` object.
-    pub fn try_from<'b>(raw: &'b RawValue) -> serde_json::Result<Ext<'a>>
+    pub fn try_from<'b>(raw: &'b RawValue) -> serde_json::Result<Self>
     where
         'b: 'a,
     {
         check_raw(raw).map(Self).map_err(ser::Error::custom)
     }
 
-    /// Access the JSON text.
-    pub fn get(&'a self) -> &'a str {
-        self.0.get()
+    /// Converts to a specified type.
+    pub fn try_into<'b, T>(&'a self) -> serde_json::Result<T>
+    where
+        T: serde::Deserialize<'b>,
+        'a: 'b,
+    {
+        serde_json::from_str(self.0.get())
     }
 }
 
@@ -56,10 +60,10 @@ fn check_raw(raw: &RawValue) -> Result<&RawValue, &'static str> {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-
     use serde::{Deserialize, Serialize};
     use serde_json::{from_str, value::to_raw_value, Map, Value};
+
+    use super::*;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
     struct Object<'a> {
@@ -83,7 +87,7 @@ mod test {
         });
         let raw = to_raw_value(&object)?;
         let ext = Ext::try_from(raw.as_ref())?;
-        let ext2 = from_str::<Extension>(ext.get())?;
+        let ext2 = from_str::<Extension>(ext.0.get())?;
         assert_eq!(ext2, Extension { f1: "abc", f2: 123 });
 
         Ok(())
