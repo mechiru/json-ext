@@ -26,6 +26,14 @@ impl<'a> Ext<'a> {
     }
 }
 
+// TODO: whether implement default or not?
+// impl<'a> Default for Ext<'a> {
+//     fn default() -> Self {
+//         //Self(unsafe { std::mem::transmute::<&str, &RawValue>("null") })
+//         serde_json::from_str::<Self>("null").unwrap()
+//     }
+// }
+
 impl<'a> PartialEq for Ext<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.0.get() == other.0.get()
