@@ -84,7 +84,7 @@ mod test {
     }
 
     #[test]
-    fn try_from_and_get() -> serde_json::Result<()> {
+    fn try_from_and_try_into() -> serde_json::Result<()> {
         let object = Value::Object({
             let mut m = Map::new();
             m.insert("f1".into(), Value::String("abc".into()));
@@ -92,9 +92,15 @@ mod test {
             m
         });
         let raw = to_raw_value(&object)?;
-        let ext = Object::try_from(raw.as_ref())?;
-        let ext2 = from_str::<Ext>(ext.0.get())?;
-        assert_eq!(ext2, Ext { f1: "abc", f2: 123 });
+
+        let obj = Object::try_from(raw.as_ref())?;
+        assert_eq!(
+            obj,
+            Object(serde_json::from_str(r#"{"f1":"abc","f2":123}"#)?)
+        );
+
+        let obj2 = obj.try_into::<Ext>()?;
+        assert_eq!(obj2, Ext { f1: "abc", f2: 123 });
 
         Ok(())
     }
