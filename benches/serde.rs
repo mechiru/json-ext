@@ -7,7 +7,7 @@ use test::Bencher;
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Object<'a> {
     #[serde(borrow)]
-    ext: json_ext::Ext<'a>,
+    ext: json_ext::Object<'a>,
 }
 
 const JSON: &str = include_str!("json/sample.json");

@@ -5,10 +5,10 @@ use serde_json::value::RawValue;
 
 /// Represents a custom JSON object.
 #[derive(Debug, Clone)]
-pub struct Ext<'a>(&'a RawValue);
+pub struct Object<'a>(&'a RawValue);
 
-impl<'a> Ext<'a> {
-    /// Convert a `&RawValue` to an `Ext` object.
+impl<'a> Object<'a> {
+    /// Convert a `&RawValue` to a `Object` object.
     pub fn try_from<'b>(raw: &'b RawValue) -> serde_json::Result<Self>
     where
         'b: 'a,
@@ -27,20 +27,20 @@ impl<'a> Ext<'a> {
 }
 
 // TODO: whether implement default or not?
-// impl<'a> Default for Ext<'a> {
+// impl<'a> Default for Object<'a> {
 //     fn default() -> Self {
 //         //Self(unsafe { std::mem::transmute::<&str, &RawValue>("null") })
 //         serde_json::from_str::<Self>("null").unwrap()
 //     }
 // }
 
-impl<'a> PartialEq for Ext<'a> {
+impl<'a> PartialEq for Object<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.0.get() == other.0.get()
     }
 }
 
-impl<'a> ser::Serialize for Ext<'a> {
+impl<'a> ser::Serialize for Object<'a> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -49,7 +49,7 @@ impl<'a> ser::Serialize for Ext<'a> {
     }
 }
 
-impl<'de: 'a, 'a> de::Deserialize<'de> for Ext<'a> {
+impl<'de: 'a, 'a> de::Deserialize<'de> for Object<'a> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -74,13 +74,13 @@ mod test {
     use super::*;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
-    struct Object<'a> {
+    struct Obj<'a> {
         #[serde(borrow)]
-        ext: Ext<'a>,
+        ext: Object<'a>,
     }
 
     #[derive(Serialize, Deserialize, Debug, PartialEq)]
-    struct Extension<'a> {
+    struct Ext<'a> {
         f1: &'a str,
         f2: i32,
     }
@@ -94,29 +94,29 @@ mod test {
             m
         });
         let raw = to_raw_value(&object)?;
-        let ext = Ext::try_from(raw.as_ref())?;
-        let ext2 = from_str::<Extension>(ext.0.get())?;
-        assert_eq!(ext2, Extension { f1: "abc", f2: 123 });
+        let ext = Object::try_from(raw.as_ref())?;
+        let ext2 = from_str::<Ext>(ext.0.get())?;
+        assert_eq!(ext2, Ext { f1: "abc", f2: 123 });
 
         Ok(())
     }
 
     #[test]
     fn json() -> serde_json::Result<()> {
-        assert!(from_str::<Object>(r#"{"ext":null}"#).is_ok());
-        assert!(from_str::<Object>(r#"{"ext":true}"#).is_err());
-        assert!(from_str::<Object>(r#"{"ext":1}"#).is_err());
-        assert!(from_str::<Object>(r#"{"ext":"1"}"#).is_err());
-        assert!(from_str::<Object>(r#"{"ext":[1]}"#).is_err());
-        assert!(from_str::<Object>(r#"{"ext":{}}"#).is_ok());
+        assert!(from_str::<Obj>(r#"{"ext":null}"#).is_ok());
+        assert!(from_str::<Obj>(r#"{"ext":true}"#).is_err());
+        assert!(from_str::<Obj>(r#"{"ext":1}"#).is_err());
+        assert!(from_str::<Obj>(r#"{"ext":"1"}"#).is_err());
+        assert!(from_str::<Obj>(r#"{"ext":[1]}"#).is_err());
+        assert!(from_str::<Obj>(r#"{"ext":{}}"#).is_ok());
 
         let s1 = r#"{"ext": 	
 null}"#;
-        let o1 = from_str::<Object>(s1)?;
+        let o1 = from_str::<Obj>(s1)?;
         assert_eq!(
             o1,
-            Object {
-                ext: Ext::try_from(to_raw_value(&Value::Null)?.as_ref())?,
+            Obj {
+                ext: Object::try_from(to_raw_value(&Value::Null)?.as_ref())?,
             }
         );
         assert_eq!(serde_json::to_string(&o1)?, r#"{"ext":null}"#);
@@ -124,11 +124,11 @@ null}"#;
         let s2 = r#"{"ext": 	
 {}
  	}"#;
-        let o2 = serde_json::from_str::<Object>(s2)?;
+        let o2 = serde_json::from_str::<Obj>(s2)?;
         assert_eq!(
             o2,
-            Object {
-                ext: Ext::try_from(to_raw_value(&Value::Object(Default::default()))?.as_ref())?,
+            Obj {
+                ext: Object::try_from(to_raw_value(&Value::Object(Default::default()))?.as_ref())?,
             }
         );
         assert_eq!(serde_json::to_string(&o2)?, r#"{"ext":{}}"#);
